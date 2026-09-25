@@ -29,9 +29,13 @@ The facet docs occasionally drift; the critic reconciled them. Authoritative rul
   `www`/`dashboard`; and the management-plane APIs on their own hosts — `analytics.algolia.com`,
   `insights.algolia.io`, `usage.algolia.com`, `crawler.algolia.com`, `personalization.*`,
   `query-suggestions.*`, `status.algolia.com`, `data.*.algolia.com`.
-- **`api.dashboard.algolia.com`** (the dashboard's real backend) and the management APIs are best reached
-  **only via the in-scope SPA's own XHR** unless the live policy confirms them as in scope — **verify before
-  tampering.**
+- **`api.dashboard.algolia.com` is confirmed NOT in scope (2026-09-25):** the live table lists
+  `dashboard.algolia.com` as a *Domain* asset and there is no `*.algolia.com` wildcard. Exercise dashboard authz
+  **only via the in-scope SPA's own same-origin requests**, demonstrate backend bugs *through* the in-scope
+  origin, and don't scan the API host as a standalone target.
+- **Report-volume signal (live):** `www` ≈35% of all reports (saturated — expect dups), `*.algolia.net` ≈12%,
+  `dashboard` ≈5% (newest asset, added Apr 2024 — least tested), `*.algolianet.com` ≈4%. Weight manual time
+  toward the **dashboard control-plane authz** and the **wildcards' platform enforcement**, not `www`.
 - **Recommend API** (`POST /1/indexes/*/recommendations`) and **MCM/clusters** (`/1/clusters/*`) **are in
   scope** — they're served on `{APPID}-dsn.algolia.net`. Newer and under-tested; good hunting.
 - **Secured-API-key restriction bypass is HIGH/CRITICAL**, not medium (one facet undersold it).

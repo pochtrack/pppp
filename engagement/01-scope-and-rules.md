@@ -12,9 +12,14 @@
 
 ## In-scope assets (authoritative)
 
-Pulled from the hourly-updated HackerOne scope mirror `arkadiyt/bounty-targets-data`
-(`data/hackerone_data.json`, handle `algolia`). **Re-verify against the live policy page before you start** — scope
-changes and this snapshot can lag.
+Pulled from the hourly-updated HackerOne scope mirror `arkadiyt/bounty-targets-data` and **confirmed against the
+live HackerOne policy on 2026-09-25** — the four assets below are *exactly* what the program lists, no more.
+
+**Per-asset report volume (from the live scope table) — a saturation signal:** `www.algolia.com` 113 reports
+(≈35% of the program), `*.algolia.net` 38 (≈12%), `dashboard.algolia.com` 15 (≈5%, added Apr 2024),
+`*.algolianet.com` 13 (≈4%). Read this as: **`www` is heavily mined → expect duplicates; `dashboard` is the newest
+and least-tested in-scope asset → best fresh-surface odds; the wildcards' platform-enforcement surface is where
+the critical, non-dup bugs live.**
 
 | Asset | Type | Bounty eligible | Max severity | What it is |
 |---|---|---|---|---|
@@ -29,6 +34,17 @@ the four patterns above as out of scope — in particular:
   Algolia application/app-ID).
 - Algolia sub-processors and third-party SaaS (status page vendor, support desk, CDN provider control panels, etc.).
 - Corporate/employee infrastructure not on the listed hosts.
+
+**`api.dashboard.algolia.com` and other `*.algolia.com` hosts are NOT in scope (confirmed 2026-09-25).** The live
+table lists `dashboard.algolia.com` as a *Domain* asset (that exact host) and there is **no `*.algolia.com`
+wildcard**. The dashboard SPA drives a separate backend, `api.dashboard.algolia.com`, which is therefore **not an
+in-scope asset on its own**. Test the dashboard's authorization by exercising the **in-scope
+`dashboard.algolia.com` origin's own requests** (the calls the SPA itself issues in a normal session); if you find
+a backend-authz bug, demonstrate it **through the in-scope origin** and note the backend host in your report —
+**do not independently scan/fuzz `api.dashboard.algolia.com` as a standalone target**, and ask the program to
+confirm inclusion before relying on it. The management-plane hosts (`analytics.algolia.com`, `insights.algolia.io`,
+`crawler.algolia.com`, `usage.`, `personalization.`, `query-suggestions.`, `status.`, `data.*`) are likewise
+**out of scope** — a finding there is triaged out-of-asset regardless of severity.
 
 > ⚠️ **Multi-tenant wildcard caveat.** `*.algolia.net` / `*.algolianet.com` resolve to *customer* application hosts.
 > "In scope" means **the Algolia platform behavior** is fair game (tenant isolation, key ACL enforcement, takeover of
