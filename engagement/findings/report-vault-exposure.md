@@ -63,10 +63,17 @@ Properly protected (returned `permission denied`/404): `/v1/sys/ha-status`, `/v1
 1. **Production secrets manager reachable from the public internet.** The full Vault API (including `/v1/auth/oidc/*`
    login endpoints) is reachable from any host — not restricted to an internal network/VPN/mTLS. This maximizes the
    attack surface of the most sensitive component in the stack.
-2. **Applicable authentication CVE on an enabled auth method.** v1.16.2 is missing the CVE-2024-5798 fix (1.16.3);
-   the OIDC/JWT auth method is confirmed enabled. Under vulnerable role configurations this class of flaw lets a
-   token with a mismatched audience/bound-claim authenticate — i.e. a potential auth bypass into Vault. Exploitability
-   depends on role config (bound_audiences/bound_claims) and was **not tested** here.
+2. **Applicable authentication CVE on the enabled auth backend.** **CVE-2024-5798 / HCSEC-2024-11** (fixed in
+   1.15.9 / **1.16.3** / 1.17.0) is an auth-bypass in Vault's JWT/OIDC auth plugin: Vault did not correctly validate
+   the role-bound **audience (`aud`) claim**, specifically for **array-type `aud` claims**, so a JWT whose audience
+   did not match the role's `bound_audiences` could still validate and log in when it should have been rejected
+   (code path `vault/builtin/credential/jwt/jwt.go`). This instance runs the unpatched **1.16.2** and has the
+   `oidc/` backend (the same plugin that serves JWT-login roles) enabled and internet-reachable.
+   **Precision / honesty:** the CVE concerns the **JWT audience validation** path; whether it is *directly*
+   exploitable here depends on whether a role accepts direct JWT login (`role_type: jwt`) and its
+   `bound_audiences`/`bound_claims` config — which was **not tested** (that requires attempting authentication,
+   which is out of bounds for this report). The point stands that the vulnerable, unpatched component is enabled
+   and exposed → it should be patched regardless.
 3. **Information disclosure:** exact version + build date (CVE matching), internal hostname
    `hashicorp-vault-02.algolia.internal` + internal ports (8200/8201), HA/raft indices, unseal quorum (`t:2,n:18`),
    storage backend (raft), cluster id/name, and the enabled auth topology (Okta OIDC).
